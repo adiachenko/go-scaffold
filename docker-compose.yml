@@ -1,0 +1,35 @@
+# Compose File Reference: https://docs.docker.com/compose/compose-file/
+version: '3.7'
+
+services:
+  # Docker Image: https://hub.docker.com/_/golang
+  app:
+    # ensure that application container is run as a daemon for convenience
+    command: tail -f /dev/null
+    image: golang:1.13.5-stretch
+    environment:
+      - GOPATH=/opt/project/.go
+    ports:
+      # open ports for an application web server
+      - ${DOCKER_HOST_APP_PORT:-8000}:8000
+    volumes:
+      - ./:/opt/project:cached
+    working_dir: /opt/project
+
+  # Docker Image: https://hub.docker.com/_/rabbitmq
+  rabbitmq:
+    image: rabbitmq:3.7.17-management-alpine
+    ports:
+      - ${DOCKER_HOST_RABBITMQ_PORT:-5672}:5672
+      - ${DOCKER_HOST_RABBITMQ_ADMIN_PORT:-15672}:15672
+
+  # Docker Image: https://hub.docker.com/r/jaegertracing/all-in-one
+  jaeger:
+    image: jaegertracing/all-in-one:1.14.0
+    environment:
+      - COLLECTOR_ZIPKIN_HTTP_PORT=9411
+    ports:
+      # see https://github.com/jaegertracing/jaeger/blob/master/ports/ports.go
+      # https://www.jaegertracing.io/docs/1.7/getting-started/
+      - ${DOCKER_HOST_JAEGER_COLLECTOR_PORT:-9411}:9411
+      - ${DOCKER_HOST_JAEGER_UI_PORT:-16686}:16686
